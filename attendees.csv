@@ -1,0 +1,12 @@
+event_id,name,email,rsvp,role,dietary
+1,Alice,alice@example.com,Attending,,
+3,Ramakrishnan,ram@gmail.com,Confirmed,Player,Energy Drinks
+3,Jason ,jason@gmail.com,Pending,,
+4,John,john@gmail.com,Confirmed,,
+5,Jackson,jackson@gmail.com,Confirmed,,
+3,Rocky,rocky@gmail.com,Pending,,
+3,Jose,jose@gmail.com,Pending,player,energy drinks
+3,Ruther,ruther@gmail.com,Confirmed,,Drinks
+3,Ramesh,ramesh@gmail.com,Pending,Player,vegan 
+3,Virat,virat@gmail.com,Confirmed,Player,Vegan
+3,Shaan,shaan@gmail.com,Pending,Coach,
