@@ -12,35 +12,26 @@ def local_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        /* 1. GLOBAL TEXT & BACKGROUND */
-        html, body, [class*="css"], .stMarkdown, p, h1, h2, h3, h4, span, div {
+        /* 1. GLOBAL FONT SETTINGS */
+        html, body, [class*="css"], .stMarkdown {
             font-family: 'Inter', sans-serif;
-            color: #FFFFFF !important;
         }
-        .stApp, header[data-testid="stHeader"], [data-testid="stSidebar"] {
-            background-color: #0E1117 !important;
+
+        /* 2. REMOVE DEFAULT PADDING */
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
         }
-        
-        /* 2. CARDS & CONTAINERS */
+
+        /* 3. CARDS & CONTAINERS */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #1A1C24;
             border-radius: 16px;
             border: 1px solid #2E303E;
             padding: 24px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
         }
         
-        /* 3. INPUT FIELDS (Fixing the Date & Text Inputs) */
-        .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
-            background-color: #0E1117 !important; 
-            color: white !important;
-            border: 1px solid #4F4F4F !important;
-            border-radius: 8px;
-        }
-        /* Fix the calendar popup icon color */
-        .stDateInput svg {
-            fill: #6C63FF !important;
-        }
-
         /* 4. BUTTONS */
         .stButton > button {
             background-color: #6C63FF;
@@ -48,12 +39,15 @@ def local_css():
             border-radius: 8px;
             border: none;
             font-weight: 500;
+            transition: all 0.2s;
         }
         .stButton > button:hover {
             background-color: #5a52d5;
+            box-shadow: 0px 4px 12px rgba(108, 99, 255, 0.3);
+            transform: translateY(-2px);
         }
 
-        /* 5. DATE BADGE (Purple Box) */
+        /* 5. DATE BADGE */
         .date-badge {
             background-color: #2D2F3E;
             color: #6C63FF !important;
@@ -65,12 +59,25 @@ def local_css():
             border: 1px solid #6C63FF;
         }
         
-        /* 6. POPUPS & DROPDOWNS */
-        div[data-baseweb="popover"], div[data-baseweb="menu"], div[role="listbox"] {
-            background-color: #1A1C24 !important;
-            border: 1px solid #2E303E !important;
+        /* 6. BANNER */
+        .insight-banner {
+            background: linear-gradient(135deg, #6C63FF 0%, #4834d4 100%);
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 20px;
+            color: white !important;
         }
         
+        /* 7. CUSTOM DATAFRAME STYLING (For Attendees & Tasks) */
+        /* This fixes the table header visibility */
+        div[data-testid="stDataFrame"] {
+            background-color: #1A1C24;
+            border: 1px solid #2E303E;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        /* HIDE FOOTER */
         footer {visibility: hidden;}
         </style>
         """, unsafe_allow_html=True)
@@ -112,7 +119,7 @@ def render_event_card(event, unique_idx):
                 <div style='color: white; font-size: 14px;'>
                     📅 {date_obj.year} &nbsp; | &nbsp; ⏰ {event['time']} <br>
                     📍 {event['location']} <br>
-                    <span style='color: #E0E0E0; font-size: 13px; font-style: italic;'>{event['description']}</span>
+                    <span style='color: #A0A0A0; font-size: 13px; font-style: italic;'>{event['description']}</span>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -150,7 +157,6 @@ if menu == "Dashboard":
                     name = c1.text_input("Event Name")
                     loc = c2.text_input("Location")
                     c3, c4 = st.columns(2)
-                    # THIS DATE PICKER NOW USES THE DARK THEME CSS
                     date = c3.date_input("Date")
                     time_val = c4.time_input("Time")
                     desc = st.text_area("Description")
@@ -199,26 +205,14 @@ if menu == "Dashboard":
             with tab_attendees:
                 attendees = logic.get_attendees(event['id'])
                 if not attendees.empty:
-                    # STYLE THE TABLE: BLACK BACKGROUND, WHITE FONT
-                    styled_df = attendees[['name', 'email', 'rsvp', 'role']].style.set_properties(**{
-                        'background-color': '#1A1C24',
-                        'color': 'white',
-                        'border-color': '#2E303E'
-                    })
-                    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+                    st.dataframe(attendees[['name', 'email', 'rsvp', 'role']], use_container_width=True, hide_index=True)
                 else:
                     st.info("No guests registered yet.")
                     
             with tab_tasks:
                 tasks = logic.get_tasks(event['id'])
                 if not tasks.empty:
-                    # STYLE THE TABLE: BLACK BACKGROUND, WHITE FONT
-                    styled_tasks = tasks[['task_name', 'status', 'priority', 'deadline']].style.set_properties(**{
-                        'background-color': '#1A1C24',
-                        'color': 'white',
-                        'border-color': '#2E303E'
-                    })
-                    st.dataframe(styled_tasks, use_container_width=True, hide_index=True)
+                    st.dataframe(tasks[['task_name', 'status', 'priority', 'deadline']], use_container_width=True, hide_index=True)
                 else:
                     st.info("No tasks assigned.")
 
@@ -244,13 +238,7 @@ elif menu == "Attendees":
         
         attendees = logic.get_attendees(selected_id)
         if not attendees.empty:
-            # STYLE THE TABLE: BLACK BACKGROUND, WHITE FONT
-            styled_df = attendees[['name', 'email', 'rsvp', 'role']].style.set_properties(**{
-                'background-color': '#1A1C24',
-                'color': 'white',
-                'border-color': '#2E303E'
-            })
-            st.dataframe(styled_df, use_container_width=True, hide_index=True)
+            st.dataframe(attendees[['name', 'email', 'rsvp', 'role']], use_container_width=True, hide_index=True)
         else:
             st.info("No guests found.")
 
@@ -276,13 +264,7 @@ elif menu == "Task Manager":
         
         tasks = logic.get_tasks(selected_id)
         if not tasks.empty:
-            # STYLE THE TABLE: BLACK BACKGROUND, WHITE FONT
-            styled_tasks = tasks[['task_name', 'status', 'priority', 'deadline']].style.set_properties(**{
-                'background-color': '#1A1C24',
-                'color': 'white',
-                'border-color': '#2E303E'
-            })
-            st.dataframe(styled_tasks, use_container_width=True, hide_index=True)
+            st.dataframe(tasks[['task_name', 'status', 'priority', 'deadline']], use_container_width=True, hide_index=True)
         else:
             st.info("No tasks found.")
 
