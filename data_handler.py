@@ -1,31 +1,27 @@
 import pandas as pd
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 
 class DataHandler:
-    def save_to_csv(self, data, filename):
-        """
-        Saves a list of dictionaries or a single dictionary to a CSV file.
-        Overwrites existing content by default.
-        Returns a success message or an error message.
-        """
-        try:
-            # Convert data to DataFrame
-            df = pd.DataFrame(data if isinstance(data, list) else [data])
-            df.to_csv(filename, mode='w', index=False)
-            return f'Data saved to {filename}.'
-        except Exception as e:
-            return f'Error saving data: {e}'
+    def __init__(self):
+        # Establish connection to Google Sheets
+        self.conn = st.connection("gsheets", type=GSheetsConnection)
 
-    def load_from_csv(self, filename):
-        """
-        Loads data from a CSV file and returns it as a pandas DataFrame.
-        Returns an empty DataFrame if file not found or error occurs.
-        """
+    def load_data(self, worksheet_name):
+        """Loads a specific worksheet into a DataFrame"""
         try:
-            df = pd.read_csv(filename)
+            # Read data, focusing on the specific worksheet
+            # ttl=0 means "don't cache", always get fresh data
+            df = self.conn.read(worksheet=worksheet_name, ttl="0") 
             return df if not df.empty else pd.DataFrame()
-        except FileNotFoundError:
-            print(f"Warning: {filename} not found. Returning empty DataFrame.")
-            return pd.DataFrame()
         except Exception as e:
-            print(f"Error loading {filename}: {e}")
             return pd.DataFrame()
+
+    def save_data(self, data, worksheet_name):
+        """Overwrites a worksheet with new data"""
+        try:
+            df = pd.DataFrame(data if isinstance(data, list) else [data])
+            self.conn.update(worksheet=worksheet_name, data=df)
+            return "Saved to Cloud"
+        except Exception as e:
+            return f"Error saving: {e}"
