@@ -13,31 +13,29 @@ def local_css():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        html, body, [class*="css"] {
+        /* 1. GLOBAL TEXT COLOR FIX */
+        html, body, [class*="css"], .stMarkdown, p, h1, h2, h3, h4, span, div {
             font-family: 'Inter', sans-serif;
-            color: #E0E0E0;
+            color: #FFFFFF !important; /* Force White Everywhere */
         }
         
-        /* --- 1. FORCE DARK BACKGROUND --- */
+        /* 2. FORCE DARK BACKGROUND */
         .stApp {
             background-color: #0E1117;
         }
         
-        /* --- 2. HIDE/COLOR THE TOP HEADER (The Fix) --- */
+        /* 3. HEADER BAR */
         header[data-testid="stHeader"] {
-            background-color: #0E1117; /* Matches your background */
+            background-color: #0E1117;
         }
 
-        /* --- SIDEBAR STYLING --- */
+        /* --- SIDEBAR --- */
         [data-testid="stSidebar"] {
             background-color: #0E1117;
             border-right: 1px solid #2E303E;
         }
-        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] span, [data-testid="stSidebar"] p {
-            color: #FFFFFF !important;
-        }
 
-        /* --- REST OF YOUR CSS (Same as before) --- */
+        /* --- CARDS --- */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #1A1C24;
             border-radius: 16px;
@@ -46,33 +44,32 @@ def local_css():
             padding: 24px;
         }
         
+        /* --- METRICS --- */
         div[data-testid="stMetric"] {
             background-color: #262730 !important;
             padding: 10px;
             border-radius: 8px;
             border: 1px solid #2E303E;
         }
-        div[data-testid="stMetricLabel"] { color: #A0A0A0 !important; }
+        div[data-testid="stMetricLabel"] > label { color: #A0A0A0 !important; }
         div[data-testid="stMetricValue"] { color: #FFFFFF !important; }
 
+        /* --- BUTTONS --- */
         .stButton > button {
             background-color: #6C63FF;
-            color: white;
+            color: white !important;
             border-radius: 8px;
             border: none;
             font-weight: 500;
-            padding: 0.5rem 1rem;
-            transition: all 0.2s;
         }
         .stButton > button:hover {
             background-color: #5a52d5;
-            box-shadow: 0px 4px 12px rgba(108, 99, 255, 0.3);
-            transform: translateY(-1px);
         }
 
+        /* --- DATE BADGE --- */
         .date-badge {
             background-color: #2D2F3E;
-            color: #6C63FF;
+            color: #6C63FF !important; /* Keep badge purple */
             padding: 12px;
             border-radius: 12px;
             text-align: center;
@@ -80,22 +77,22 @@ def local_css():
             width: 70px;
             border: 1px solid #6C63FF;
         }
-        .date-day { font-size: 24px; line-height: 24px; }
-        .date-month { font-size: 12px; text-transform: uppercase; }
+        .date-day { font-size: 24px; line-height: 24px; color: #6C63FF !important; }
+        .date-month { font-size: 12px; text-transform: uppercase; color: #6C63FF !important; }
 
+        /* --- BANNER --- */
         .insight-banner {
             background: linear-gradient(135deg, #6C63FF 0%, #4834d4 100%);
             border-radius: 16px;
             padding: 30px;
-            color: white;
+            color: white !important;
             margin-top: 20px;
         }
-        .insight-metric { font-size: 32px; font-weight: 700; margin-bottom: 0px; color: white !important;}
-        .insight-label { font-size: 14px; opacity: 0.9; color: #E0E0E0 !important; }
         
+        /* --- INPUTS --- */
         .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #0E1117; 
-            color: white;
+            color: white !important;
             border-radius: 8px;
             border: 1px solid #4F4F4F;
         }
@@ -103,9 +100,6 @@ def local_css():
         footer {visibility: hidden;}
         </style>
         """, unsafe_allow_html=True)
-
-local_css()
-logic = EventLogic()
 
 # --- HELPER: UNIFIED HEADER FUNCTION ---
 def page_header(title, subtitle):
@@ -145,6 +139,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 # --- HELPER: RENDER CARD ---
+
 def render_event_card(event, unique_idx):
     date_obj = pd.to_datetime(event['date'])
     day = date_obj.day
@@ -162,12 +157,15 @@ def render_event_card(event, unique_idx):
             """, unsafe_allow_html=True)
             
         with col_info:
-            st.subheader(event['name'])
+            # 1. Force Title to White
+            st.markdown(f"<h3 style='color: white; margin: 0 0 5px 0;'>{event['name']}</h3>", unsafe_allow_html=True)
+            
+            # 2. Force Details to White (Changed from #A0A0A0)
             st.markdown(f"""
-                <div style='color: #A0A0A0; font-size: 14px; margin-top: -15px;'>
+                <div style='color: white; font-size: 14px;'>
                     📅 {date_obj.year} &nbsp; | &nbsp; ⏰ {event['time']} <br>
                     📍 {event['location']} <br>
-                    <span style='color: #6C63FF; font-size: 13px;'>{event['description']}</span>
+                    <span style='color: #E0E0E0; font-size: 13px; font-style: italic;'>{event['description']}</span>
                 </div>
             """, unsafe_allow_html=True)
             
@@ -373,3 +371,4 @@ elif menu == "Task Manager":
             else:
 
                 st.info("No active tasks.")
+
