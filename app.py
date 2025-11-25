@@ -207,8 +207,8 @@ if menu == "Dashboard":
                         st.session_state['show_create'] = False
                         st.rerun()
 
-        events_df = logic.get_events()
-        if not events_df.empty:
+         events_df = logic.get_events()
+         if not events_df.empty:
             events_df['date'] = pd.to_datetime(events_df['date'])
             events_df = events_df.sort_values(by='date')
             for idx, (_, event) in enumerate(events_df.iterrows()):
@@ -371,4 +371,5 @@ elif menu == "Task Manager":
             else:
 
                 st.info("No active tasks.")
+
 
