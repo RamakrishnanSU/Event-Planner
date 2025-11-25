@@ -6,107 +6,84 @@ import time
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Event Pro", page_icon="📅", layout="wide")
 
-# --- CUSTOM CSS (Dark Mode & White Text Fix) ---
+# --- CUSTOM CSS ---
 def local_css():
     st.markdown("""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        /* 1. GLOBAL TEXT COLOR FIX */
+        /* GLOBAL TEXT & BACKGROUND */
         html, body, [class*="css"], .stMarkdown, p, h1, h2, h3, h4, span, div {
             font-family: 'Inter', sans-serif;
             color: #FFFFFF !important;
         }
-        
-        /* 2. FORCE DARK BACKGROUND */
-        .stApp {
-            background-color: #0E1117;
+        .stApp, header[data-testid="stHeader"], [data-testid="stSidebar"] {
+            background-color: #0E1117 !important;
         }
         
-        /* 3. HEADER BAR */
-        header[data-testid="stHeader"] {
-            background-color: #0E1117;
-        }
-
-        /* --- SIDEBAR --- */
-        [data-testid="stSidebar"] {
-            background-color: #0E1117;
-            border-right: 1px solid #2E303E;
-        }
-
-        /* --- CARDS --- */
+        /* CONTAINERS & CARDS */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #1A1C24;
             border-radius: 16px;
             border: 1px solid #2E303E;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
             padding: 24px;
         }
         
-        /* --- METRICS --- */
-        div[data-testid="stMetric"] {
-            background-color: #262730 !important;
-            padding: 10px;
+        /* INPUT FIELDS */
+        .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
+            background-color: #0E1117 !important; 
+            color: white !important;
+            border: 1px solid #4F4F4F !important;
             border-radius: 8px;
-            border: 1px solid #2E303E;
         }
-        div[data-testid="stMetricLabel"] > label { color: #A0A0A0 !important; }
-        div[data-testid="stMetricValue"] { color: #FFFFFF !important; }
-
-        /* --- BUTTONS --- */
+        
+        /* BUTTONS */
         .stButton > button {
             background-color: #6C63FF;
             color: white !important;
+            font-weight: 600;
             border-radius: 8px;
             border: none;
-            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
         }
         .stButton > button:hover {
             background-color: #5a52d5;
+            box-shadow: 0px 4px 12px rgba(108, 99, 255, 0.3);
+            transform: translateY(-2px);
         }
 
-        /* --- DATE BADGE --- */
-        .date-badge {
-            background-color: #2D2F3E;
-            color: #6C63FF !important;
-            padding: 12px;
+        /* CUSTOM ATTENDEE ROW STYLING */
+        .attendee-row {
+            background-color: #1A1C24;
+            border-bottom: 1px solid #2E303E;
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .role-badge {
+            font-size: 11px;
+            padding: 4px 8px;
             border-radius: 12px;
-            text-align: center;
+            background-color: #2D2F3E;
+            color: #A0A0A0 !important;
+            border: 1px solid #4F4F4F;
+            text-transform: uppercase;
             font-weight: 700;
-            width: 70px;
-            border: 1px solid #6C63FF;
         }
-        .date-day { font-size: 24px; line-height: 24px; color: #6C63FF !important; }
-        .date-month { font-size: 12px; text-transform: uppercase; color: #6C63FF !important; }
-
-        /* --- BANNER --- */
-        .insight-banner {
-            background: linear-gradient(135deg, #6C63FF 0%, #4834d4 100%);
-            border-radius: 16px;
-            padding: 30px;
-            color: white !important;
-            margin-top: 20px;
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
         }
         
-        /* --- INPUTS --- */
-        .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
-            background-color: #0E1117; 
-            color: white !important;
-            border-radius: 8px;
-            border: 1px solid #4F4F4F;
-        }
-
-        /* --- FIX POPUPS & DROPDOWNS (THE FIX) --- */
+        /* FIX POPUPS */
         div[data-baseweb="popover"], div[data-baseweb="menu"], div[role="listbox"] {
             background-color: #1A1C24 !important;
             border: 1px solid #2E303E !important;
-        }
-        li[role="option"] {
-            color: white !important;
-            background-color: #1A1C24 !important;
-        }
-        li[role="option"]:hover {
-            background-color: #6C63FF !important;
         }
         
         footer {visibility: hidden;}
@@ -116,110 +93,103 @@ def local_css():
 local_css()
 logic = EventLogic()
 
-# --- HELPER: UNIFIED HEADER FUNCTION ---
+# --- HELPER FUNCTIONS ---
 def page_header(title, subtitle):
-    """Displays the consistent Event Pro header on every page"""
     st.markdown(f"""
         <div style="display: flex; align-items: center; margin-bottom: 25px;">
             <div style="background: linear-gradient(135deg, #6C63FF 0%, #4834d4 100%); width: 8px; height: 45px; border-radius: 4px; margin-right: 15px;"></div>
             <div>
-                <h1 style="margin: 0; font-size: 36px; font-weight: 800; color: white;">Event Pro</h1>
-                <p style="margin: 0; color: #A0A0A0; font-size: 16px; font-weight: 500;">{title} &nbsp;|&nbsp; {subtitle}</p>
+                <h1 style="margin: 0; font-size: 32px; font-weight: 800; color: white;">Event Pro</h1>
+                <p style="margin: 0; color: #A0A0A0; font-size: 15px; font-weight: 500;">{title} &nbsp;|&nbsp; {subtitle}</p>
             </div>
         </div>
     """, unsafe_allow_html=True)
 
-# --- INITIALIZE SESSION STATE ---
-if 'view_event_id' not in st.session_state:
-    st.session_state['view_event_id'] = None
-
-# --- SIDEBAR NAV ---
-with st.sidebar:
-    st.markdown("""
-        <div style='display: flex; align-items: center; gap: 10px; margin-bottom: 30px;'>
-            <div style='background: #6C63FF; width: 30px; height: 30px; border-radius: 8px;'></div>
-            <h2 style='margin:0; font-size: 20px; font-weight: 700;'>Event Pro</h2>
-        </div>
-    """, unsafe_allow_html=True)
+def render_attendee_row(att):
+    """Renders a single attendee as a custom HTML row"""
+    # Color logic
+    color = "#4CAF50" if att['rsvp'] == 'Confirmed' else "#FFA500"
     
-    menu = st.radio("", ["Dashboard", "Attendees", "Task Manager", "Analytics"], label_visibility="collapsed")
-    
-    st.divider()
-    
-    st.markdown("""
-        <div style='background-color: #1E2130; padding: 15px; border-radius: 12px; color: #8F90A6; font-size: 13px;'>
-            <strong style='color: white;'>Pro Tip</strong><br>
-            Use Analytics to track RSVP trends.
+    st.markdown(f"""
+        <div class="attendee-row">
+            <div style="flex: 2;">
+                <div style="font-weight: 600; font-size: 16px;">{att['name']}</div>
+                <div style="font-size: 13px; color: #8F90A6 !important;">{att['email']}</div>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <span class="role-badge">{att['role']}</span>
+            </div>
+            <div style="flex: 1; text-align: right; font-size: 14px; font-weight: 500;">
+                <span class="status-dot" style="background-color: {color};"></span>
+                <span style="color: {color} !important;">{att['rsvp']}</span>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
-# --- HELPER: RENDER CARD ---
 def render_event_card(event, unique_idx):
     date_obj = pd.to_datetime(event['date'])
-    day = date_obj.day
-    month = date_obj.strftime("%b")
-    
     with st.container(border=True):
-        col_badge, col_info, col_btn = st.columns([1.2, 5, 2])
-        
-        with col_badge:
+        c1, c2, c3 = st.columns([1.2, 5, 2])
+        with c1:
             st.markdown(f"""
-                <div class="date-badge">
-                    <div class="date-day">{day}</div>
-                    <div class="date-month">{month}</div>
+                <div style="background-color:#2D2F3E; color:#6C63FF !important; padding:12px; border-radius:12px; text-align:center; border:1px solid #6C63FF;">
+                    <div style="font-size:24px; font-weight:700; color:#6C63FF !important;">{date_obj.day}</div>
+                    <div style="font-size:12px; text-transform:uppercase; color:#6C63FF !important;">{date_obj.strftime('%b')}</div>
                 </div>
             """, unsafe_allow_html=True)
-            
-        with col_info:
-            # Force Title to White
-            st.markdown(f"<h3 style='color: white; margin: 0 0 5px 0;'>{event['name']}</h3>", unsafe_allow_html=True)
-            
-            # Force Details to White
-            st.markdown(f"""
-                <div style='color: white; font-size: 14px;'>
-                    📅 {date_obj.year} &nbsp; | &nbsp; ⏰ {event['time']} <br>
-                    📍 {event['location']} <br>
-                    <span style='color: #E0E0E0; font-size: 13px; font-style: italic;'>{event['description']}</span>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        with col_btn:
-            st.write("")
+        with c2:
+            st.markdown(f"<h3 style='margin:0; color:white !important;'>{event['name']}</h3>", unsafe_allow_html=True)
+            st.markdown(f"<div style='color:#A0A0A0 !important; font-size:14px; margin-top:5px;'>📅 {date_obj.year} &nbsp;|&nbsp; 📍 {event['location']}</div>", unsafe_allow_html=True)
+        with c3:
             st.write("")
             if st.button("View Details >", key=f"btn_{event['id']}_{unique_idx}", use_container_width=True):
                 st.session_state['view_event_id'] = event['id']
                 st.rerun()
 
+# --- INITIALIZE STATE ---
+if 'view_event_id' not in st.session_state: st.session_state['view_event_id'] = None
+
+# --- SIDEBAR ---
+with st.sidebar:
+    st.markdown("<h2 style='color: white;'>Event Pro</h2>", unsafe_allow_html=True)
+    menu = st.radio("", ["Dashboard", "Attendees", "Task Manager", "Analytics"], label_visibility="collapsed")
+    st.divider()
+
 # --- PAGE 1: DASHBOARD ---
 if menu == "Dashboard":
     if st.session_state['view_event_id'] is None:
-        # === LIST VIEW ===
-        col_header, col_add = st.columns([6, 1.5])
-        
-        with col_header:
-            page_header("Dashboard", "All Events")
-        
-        with col_add:
-            st.write("") 
-            if st.button("➕ Create Event"):
-                st.session_state['show_create'] = not st.session_state.get('show_create', False)
+        c1, c2 = st.columns([6, 1.5])
+        with c1: page_header("Dashboard", "All Events")
+        with c2:
+            st.write("")
+            if st.button("➕ New Event"): st.session_state['show_create'] = not st.session_state.get('show_create', False)
 
+        # CREATE EVENT FORM
         if st.session_state.get('show_create', False):
             with st.container(border=True):
                 st.subheader("Create New Event")
                 with st.form("new_event"):
                     c1, c2 = st.columns(2)
-                    name = c1.text_input("Event Name")
-                    loc = c2.text_input("Location")
+                    name = c1.text_input("Event Name", placeholder="e.g. Summer Gala")
+                    loc = c2.text_input("Location", placeholder="e.g. Grand Hall")
                     c3, c4 = st.columns(2)
                     date = c3.date_input("Date")
                     time_val = c4.time_input("Time")
                     desc = st.text_area("Description")
-                    if st.form_submit_button("Save Event", use_container_width=True):
-                        logic.add_event(name, date, time_val, loc, desc)
-                        st.session_state['show_create'] = False
-                        st.rerun()
+                    
+                    st.write("")
+                    # Full width save button
+                    if st.form_submit_button("💾 Save Event to Cloud", use_container_width=True):
+                        res = logic.add_event(name, date, time_val, loc, desc)
+                        if "Error" in res:
+                            st.error(res)
+                        else:
+                            st.success("Event Created Successfully!")
+                            time.sleep(1)
+                            st.session_state['show_create'] = False
+                            st.rerun()
 
+        # EVENT LIST
         events_df = logic.get_events()
         if not events_df.empty:
             events_df['date'] = pd.to_datetime(events_df['date'])
@@ -227,166 +197,118 @@ if menu == "Dashboard":
             for idx, (_, event) in enumerate(events_df.iterrows()):
                 render_event_card(event, idx)
         else:
-            st.info("No events found.")
+            st.info("No events found in database.")
 
     else:
-        # === DETAIL VIEW ===
+        # DETAIL VIEW
         events_df = logic.get_events()
-        # Find the specific event
-        event_row = events_df[events_df['id'] == st.session_state['view_event_id']]
+        event = events_df[events_df['id'] == st.session_state['view_event_id']].iloc[0]
+        page_header("Event Details", event['name'])
         
-        if not event_row.empty:
-            event = event_row.iloc[0]
+        if st.button("← Back to Dashboard"):
+            st.session_state['view_event_id'] = None
+            st.rerun()
             
-            page_header("Dashboard", event['name'])
-            
-            if st.button("← Back to Dashboard"):
-                st.session_state['view_event_id'] = None
-                st.rerun()
-            
-            with st.container(border=True):
-                c1, c2, c3 = st.columns(3)
-                c1.markdown(f"**📅 Date:** {event['date']}")
-                c2.markdown(f"**⏰ Time:** {event['time']}")
-                c3.markdown(f"**📍 Location:** {event['location']}")
-                st.divider()
-                st.markdown(f"**📝 Description:**\n{event['description']}")
-                
-            tab_attendees, tab_tasks = st.tabs(["👥 Guest List", "✅ Tasks"])
-            
-            with tab_attendees:
-                attendees = logic.get_attendees(event['id'])
-                if not attendees.empty:
-                    st.dataframe(attendees[['name', 'email', 'rsvp', 'role']], use_container_width=True, hide_index=True)
-                else:
-                    st.info("No guests registered yet.")
-                    
-            with tab_tasks:
-                tasks = logic.get_tasks(event['id'])
-                if not tasks.empty:
-                    st.dataframe(tasks[['task_name', 'status', 'priority', 'deadline']], use_container_width=True, hide_index=True)
-                else:
-                    st.info("No tasks assigned.")
-        else:
-            st.error("Event not found.")
-            if st.button("Go Back"):
-                st.session_state['view_event_id'] = None
-                st.rerun()
+        with st.container(border=True):
+            c1, c2, c3 = st.columns(3)
+            c1.markdown(f"**📅 Date:** {event['date']}")
+            c2.markdown(f"**⏰ Time:** {event['time']}")
+            c3.markdown(f"**📍 Location:** {event['location']}")
+            st.divider()
+            st.markdown(f"**Description:** {event['description']}")
 
-# --- PAGE 2: ANALYTICS ---
-elif menu == "Analytics":
-    page_header("Analytics", "Insights & Reports")
-    
-    events_df = logic.get_events()
-    if events_df.empty:
-        st.warning("No data to analyze.")
-    else:
-        event_names = dict(zip(events_df['id'], events_df['name']))
-        col_empty, col_sel = st.columns([3, 1])
-        with col_sel:
-            selected_id = st.selectbox("Select Event", options=event_names.keys(), format_func=lambda x: event_names[x], label_visibility="collapsed")
-
-        c1, c2 = st.columns(2)
-        with c1:
-            with st.container(border=True):
-                st.subheader("RSVP Distribution")
-                fig_rsvp = logic.get_rsvp_pie_chart(selected_id)
-                if fig_rsvp: st.pyplot(fig_rsvp)
-                else: st.info("No data")
-
-        with c2:
-            with st.container(border=True):
-                st.subheader("Task Progress")
-                fig_task = logic.get_task_status_chart(selected_id)
-                if fig_task: st.pyplot(fig_task)
-                else: st.info("No data")
-
-        attendees = logic.get_attendees(selected_id)
-        tasks = logic.get_tasks(selected_id)
-        total_guests = len(attendees)
-        confirmed = len(attendees[attendees['rsvp'] == 'Confirmed']) if not attendees.empty else 0
-        pending_tasks = len(tasks[tasks['status'] != 'Completed']) if not tasks.empty else 0
-        completed_tasks = len(tasks[tasks['status'] == 'Completed']) if not tasks.empty else 0
-
-        st.markdown(f"""
-            <div class="insight-banner">
-                <h3 style="color: white; margin-bottom: 20px;">Quick Insights for {event_names[selected_id]}</h3>
-                <div style="display: flex; justify-content: space-between;">
-                    <div><div class="insight-label">Total Guests</div><div class="insight-metric">{total_guests}</div></div>
-                    <div><div class="insight-label">Confirmed</div><div class="insight-metric">{confirmed}</div></div>
-                    <div><div class="insight-label">Pending Tasks</div><div class="insight-metric">{pending_tasks}</div></div>
-                    <div><div class="insight-label">Completed</div><div class="insight-metric">{completed_tasks}</div></div>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# --- PAGE 3: ATTENDEES ---
+# --- PAGE 2: ATTENDEES (Custom UI) ---
 elif menu == "Attendees":
-    page_header("Attendees", "Guest Management")
+    page_header("Attendees", "Guest List Management")
     
     events_df = logic.get_events()
     if not events_df.empty:
         event_names = dict(zip(events_df['id'], events_df['name']))
-        selected_id = st.selectbox("Select Event", options=event_names.keys(), format_func=lambda x: event_names[x])
+        selected_id = st.selectbox("Select Event", event_names.keys(), format_func=lambda x: event_names[x])
         
-        tab_list, tab_add = st.tabs(["Guest List", "Add Guest"])
+        # Display Custom List
+        attendees_df = logic.get_attendees(selected_id)
         
-        with tab_list:
-            attendees = logic.get_attendees(selected_id)
-            if not attendees.empty:
-                st.dataframe(attendees[['name', 'email', 'rsvp', 'role']], use_container_width=True, hide_index=True)
+        with st.container(border=True):
+            if not attendees_df.empty:
+                st.markdown(f"### Guest List ({len(attendees_df)})")
+                # Loop through and render custom rows
+                for _, att in attendees_df.iterrows():
+                    render_attendee_row(att)
             else:
-                st.info("No attendees yet.")
-        
-        with tab_add:
-            with st.container(border=True):
+                st.info("No guests registered yet.")
+
+        # Add Guest Section
+        st.write("")
+        with st.expander("➕ Add New Guest", expanded=True):
+            with st.form("add_guest_form"):
                 c1, c2 = st.columns(2)
-                name = c1.text_input("Name")
-                email = c2.text_input("Email")
+                name = c1.text_input("Guest Name")
+                email = c2.text_input("Email Address")
                 c3, c4 = st.columns(2)
-                role = c3.selectbox("Role", ["Guest", "VIP", "Speaker"])
-                rsvp = c4.selectbox("RSVP", ["Confirmed", "Pending", "Declined"])
-                if st.button("Add Attendee", use_container_width=True):
-                    logic.add_attendee(selected_id, name, email, rsvp, role, "")
-                    st.success("Added!")
-                    st.rerun()
+                role = c3.selectbox("Role", ["Guest", "VIP", "Speaker", "Staff"])
+                rsvp = c4.selectbox("RSVP Status", ["Confirmed", "Pending", "Declined"])
+                
+                if st.form_submit_button("Add Guest", use_container_width=True):
+                    res = logic.add_attendee(selected_id, name, email, rsvp, role, "")
+                    if "Error" in res:
+                        st.error(res)
+                    else:
+                        st.success("Guest Added!")
+                        time.sleep(0.5)
+                        st.rerun()
 
-# --- PAGE 4: TASK MANAGER ---
+# --- PAGE 3: TASKS ---
 elif menu == "Task Manager":
-    page_header("Tasks", "Project Tracking")
+    page_header("Tasks", "Project Tracker")
     
     events_df = logic.get_events()
     if not events_df.empty:
         event_names = dict(zip(events_df['id'], events_df['name']))
-        selected_id = st.selectbox("Select Project", options=event_names.keys(), format_func=lambda x: event_names[x])
+        selected_id = st.selectbox("Select Event", event_names.keys(), format_func=lambda x: event_names[x])
         
-        c_add, c_view = st.columns([1, 2])
-        
-        with c_add:
-            with st.container(border=True):
-                st.subheader("New Task")
-                t_name = st.text_input("Task Name")
-                t_stat = st.selectbox("Status", ["Not Started", "In Progress", "Completed", "Delayed"])
-                t_due = st.date_input("Due Date")
-                if st.button("Add Task", use_container_width=True):
-                    logic.add_task(selected_id, t_name, t_stat, t_due)
+        # Task List
+        tasks_df = logic.get_tasks(selected_id)
+        if not tasks_df.empty:
+            st.dataframe(
+                tasks_df[['task_name', 'status', 'priority', 'deadline']], 
+                use_container_width=True, 
+                hide_index=True
+            )
+        else:
+            st.info("No tasks yet.")
+
+        # Add Task Form
+        st.write("")
+        with st.container(border=True):
+            st.subheader("Create New Task")
+            with st.form("add_task_form"):
+                tname = st.text_input("Task Name")
+                c1, c2, c3 = st.columns(3)
+                tstat = c1.selectbox("Status", ["Not Started", "In Progress", "Completed"])
+                tprio = c2.selectbox("Priority", ["Low", "Medium", "High"])
+                tdue = c3.date_input("Deadline")
+                
+                if st.form_submit_button("Add Task", use_container_width=True):
+                    logic.add_task(selected_id, tname, tstat, tdue, tprio)
+                    st.success("Task Added!")
+                    time.sleep(0.5)
                     st.rerun()
-                    
-        with c_view:
-            tasks = logic.get_tasks(selected_id)
-            if not tasks.empty:
-                for _, t in tasks.iterrows():
-                    with st.container(border=True):
-                        tc1, tc2 = st.columns([3, 1])
-                        tc1.markdown(f"**{t['task_name']}**")
-                        status_color = "#4CAF50" if t['status'] == "Completed" else "#FF9800" if t['status'] == "In Progress" else "#F44336"
-                        tc1.caption(f"Due: {t['deadline']}")
-                        tc2.markdown(f"<div style='color:{status_color}; font-weight:bold; text-align:right'>{t['status']}</div>", unsafe_allow_html=True)
-                        if t['status'] != "Completed":
-                            if tc2.button("Done", key=f"done_{t['task_name']}"):
-                                logic.update_task_status(selected_id, t['task_name'], "Completed")
-                                st.rerun()
-            else:
-                st.info("No active tasks.")
 
-
+# --- PAGE 4: ANALYTICS ---
+elif menu == "Analytics":
+    page_header("Analytics", "Insights")
+    events_df = logic.get_events()
+    if not events_df.empty:
+        event_names = dict(zip(events_df['id'], events_df['name']))
+        selected_id = st.selectbox("Select Event", event_names.keys(), format_func=lambda x: event_names[x])
+        
+        c1, c2 = st.columns(2)
+        with c1: 
+            st.caption("RSVP Distribution")
+            st.pyplot(logic.get_rsvp_pie_chart(selected_id))
+        with c2: 
+            st.caption("Task Status")
+            st.pyplot(logic.get_task_status_chart(selected_id))
+    else: 
+        st.warning("No data.")
