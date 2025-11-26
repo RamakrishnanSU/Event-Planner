@@ -4,28 +4,38 @@ from streamlit_gsheets import GSheetsConnection
 
 class DataHandler:
     def __init__(self):
-        # Establish connection to Google Sheets
-        # We use st.error to show if the secrets are missing
         try:
             self.conn = st.connection("gsheets", type=GSheetsConnection)
         except Exception as e:
-            st.error(f"⚠️ Connection Error: Could not find 'gsheets' in secrets. Check your .toml file. Details: {e}")
+            st.error(f"⚠️ Connection Error: {e}")
 
     def load_data(self, worksheet_name):
-        """Loads a specific worksheet into a DataFrame"""
         try:
-            # ttl=0 ensures we get fresh data every time (no caching)
             df = self.conn.read(worksheet=worksheet_name, ttl="0")
             return df if not df.empty else pd.DataFrame()
         except Exception as e:
-            # If the sheet is empty or doesn't exist yet, return empty dataframe
             return pd.DataFrame()
 
     def save_data(self, data, worksheet_name):
-        """Overwrites a worksheet with new data"""
         try:
             df = pd.DataFrame(data if isinstance(data, list) else [data])
             self.conn.update(worksheet=worksheet_name, data=df)
             return "Saved to Cloud"
         except Exception as e:
             return f"Error saving: {e}"
+
+    # --- NEW FUNCTION: DELETE ROW ---
+    def delete_data(self, worksheet_name, column_name, value_to_delete):
+        """Removes rows where column_name matches value_to_delete"""
+        try:
+            df = self.load_data(worksheet_name)
+            if df.empty: return "Sheet is empty"
+            
+            # Filter out the row to delete
+            # We convert to string to ensure safe comparison
+            df = df[df[column_name].astype(str) != str(value_to_delete)]
+            
+            self.conn.update(worksheet=worksheet_name, data=df)
+            return "Deleted"
+        except Exception as e:
+            return f"Error deleting: {e}"
