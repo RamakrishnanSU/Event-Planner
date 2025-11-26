@@ -5,7 +5,6 @@ from data_handler import DataHandler
 class EventLogic:
     def __init__(self):
         self.handler = DataHandler()
-        # Worksheet Names
         self.sheet_events = "events"
         self.sheet_tasks = "tasks"
         self.sheet_attendees = "attendees"
@@ -15,15 +14,13 @@ class EventLogic:
         df = self.handler.load_data(self.sheet_events)
         required_cols = ['id', 'name', 'date', 'time', 'location', 'description']
         
-        if df.empty:
-            return pd.DataFrame(columns=required_cols)
+        if df.empty: return pd.DataFrame(columns=required_cols)
         
         for col in required_cols:
             if col not in df.columns: df[col] = ""
         
         if 'id' in df.columns:
              df['id'] = pd.to_numeric(df['id'], errors='coerce').fillna(0).astype(int)
-             
         return df
 
     def add_event(self, name, date, time, location, description):
@@ -34,7 +31,6 @@ class EventLogic:
         events.append(new_event)
         return self.handler.save_data(events, self.sheet_events)
 
-    # --- DELETE EVENT ---
     def delete_event(self, event_id):
         res = self.handler.delete_data(self.sheet_events, "id", event_id)
         self.handler.delete_data(self.sheet_attendees, "event_id", event_id)
@@ -46,6 +42,7 @@ class EventLogic:
         df = self.handler.load_data(self.sheet_attendees)
         cols = ['event_id', 'name', 'email', 'rsvp', 'role', 'dietary']
         if df.empty: return pd.DataFrame(columns=cols)
+        
         if 'event_id' in df.columns:
              df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
         if event_id: return df[df['event_id'] == int(event_id)]
@@ -63,6 +60,7 @@ class EventLogic:
         df = self.handler.load_data(self.sheet_tasks)
         cols = ['event_id', 'task_name', 'status', 'deadline', 'priority']
         if df.empty: return pd.DataFrame(columns=cols)
+        
         if 'event_id' in df.columns:
              df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
         if event_id: return df[df['event_id'] == int(event_id)]
@@ -78,6 +76,7 @@ class EventLogic:
     def update_task_status(self, event_id, task_name, new_status):
         df = self.handler.load_data(self.sheet_tasks)
         if df.empty: return "No tasks found."
+        
         if 'event_id' in df.columns:
             df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
         
@@ -86,22 +85,22 @@ class EventLogic:
             if row['event_id'] == int(event_id) and row['task_name'] == task_name:
                 df.at[index, 'status'] = new_status
                 updated = True
+        
         if updated: return self.handler.save_data(df, self.sheet_tasks)
         return "Task not found."
 
-    # ================= ANALYTICS (BEAUTIFIED) =================
+    # ================= ANALYTICS (MATCHING DONUTS) =================
     def get_rsvp_pie_chart(self, event_id):
         attendees = self.get_attendees(event_id)
         if attendees.empty: return None
         
         rsvp_counts = attendees['rsvp'].value_counts()
         
-        # Small, Widescreen Size
         fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        colors = ['#00C853', '#FFAB00', '#D50000'] # Green, Orange, Red
+        colors = ['#00C853', '#FFAB00', '#D50000']
         
         wedges, texts, autotexts = ax.pie(
             rsvp_counts, 
@@ -111,8 +110,7 @@ class EventLogic:
             wedgeprops=dict(width=0.4, edgecolor='none'),
             textprops={'color': "white", 'fontsize': 9}
         )
-        
-        ax.axis('equal') 
+        ax.axis('equal')
         plt.setp(autotexts, size=9, weight="bold", color="white")
         plt.setp(texts, color="white")
         return fig
@@ -123,40 +121,33 @@ class EventLogic:
 
         status_counts = tasks['status'].value_counts()
         
-        # 1. Create Figure
+        # Use the same size as RSVP for symmetry
         fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        # 2. Define Colors per Status
+        # Status Color Mapping
         color_map = {
-            "Not Started": "#9E9E9E", # Grey
-            "In Progress": "#FFA500", # Orange
             "Completed": "#00C853",   # Green
+            "In Progress": "#FFA500", # Orange
+            "Not Started": "#9E9E9E", # Grey
             "Delayed": "#FF4B4B"      # Red
         }
-        # Get color list matching the data order
-        bar_colors = [color_map.get(s, '#6C63FF') for s in status_counts.index]
+        # Generate color list based on data
+        chart_colors = [color_map.get(s, '#6C63FF') for s in status_counts.index]
 
-        # 3. Draw Bar Chart
-        bars = ax.bar(status_counts.index, status_counts.values, color=bar_colors, width=0.5)
+        # Draw Donut Chart
+        wedges, texts, autotexts = ax.pie(
+            status_counts, 
+            labels=status_counts.index, 
+            autopct='%1.0f%%', 
+            colors=chart_colors,
+            wedgeprops=dict(width=0.4, edgecolor='none'),
+            textprops={'color': "white", 'fontsize': 9}
+        )
         
-        # 4. Clean Up Styling (Remove Borders)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False) # Hide left line
-        ax.spines['bottom'].set_color('white')
-        
-        # 5. Grid & Ticks
-        ax.grid(axis='y', linestyle='--', alpha=0.2, color='white') # Subtle grid
-        ax.tick_params(colors='white', labelsize=9)
-        ax.tick_params(axis='y', left=False) # Hide y-axis ticks markings
-        
-        # 6. Add Numbers on Top of Bars
-        for bar in bars:
-            height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height + 0.1,
-                    f'{int(height)}',
-                    ha='center', va='bottom', color='white', fontsize=9, fontweight='bold')
+        ax.axis('equal')
+        plt.setp(autotexts, size=9, weight="bold", color="white")
+        plt.setp(texts, color="white")
         
         return fig
