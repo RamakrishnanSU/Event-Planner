@@ -165,7 +165,7 @@ class EventLogic:
 
         status_counts = tasks['status'].value_counts()
         
-        fig, ax = plt.subplots(figsize=(5, 4))
+        fig, ax = plt.subplots(figsize=(4, 3))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
@@ -187,3 +187,4 @@ class EventLogic:
                     ha='center', va='bottom', color='white')
         
         return fig
+
