@@ -11,12 +11,11 @@ if 'theme' not in st.session_state:
     st.session_state.theme = 'dark'
 
 def set_css():
-    # === DARK MODE CSS ===
+    # === DARK MODE CSS (Your existing perfect dark mode) ===
     dark_css = """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        /* Base Settings */
         html, body, [class*="css"], .stMarkdown, p, h1, h2, h3, h4, span, div {
             font-family: 'Inter', sans-serif;
             color: #FFFFFF !important;
@@ -24,76 +23,73 @@ def set_css():
         .stApp, header[data-testid="stHeader"], [data-testid="stSidebar"] {
             background-color: #0E1117 !important;
         }
-        
-        /* Cards */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #1A1C24;
             border-radius: 16px;
             border: 1px solid #2E303E;
             box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
         }
-        
-        /* Inputs */
         .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #0E1117 !important; 
             color: white !important;
             border: 1px solid #4F4F4F !important;
         }
-        
-        /* Date Badge */
         .date-badge {
             background-color: #2D2F3E;
             color: #6C63FF !important;
             border: 1px solid #6C63FF;
         }
-        
-        /* Popups (Dark) */
         div[data-baseweb="popover"], div[data-baseweb="menu"], div[role="listbox"] {
             background-color: #1A1C24 !important;
             border: 1px solid #2E303E !important;
         }
+        /* Table Styling Dark */
+        div[data-testid="stDataFrame"] { background-color: #1A1C24; }
         </style>
     """
 
-    # === LIGHT MODE CSS ===
+    # === LIGHT MODE CSS (Fixed for Contrast) ===
     light_css = """
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
-        /* Base Settings */
+        /* Force Dark Text on Light Background */
         html, body, [class*="css"], .stMarkdown, p, h1, h2, h3, h4, span, div {
             font-family: 'Inter', sans-serif;
-            color: #1A1C24 !important; /* Dark Text */
+            color: #111827 !important; /* Very Dark Grey (Almost Black) */
         }
+        
+        /* Off-White Background for the Page (Makes cards pop) */
         .stApp, header[data-testid="stHeader"] {
-            background-color: #F8F9FA !important; /* Light Background */
+            background-color: #F3F4F6 !important; 
         }
-        /* Keep Sidebar Dark for Professional Look */
+        
+        /* Keep Sidebar Dark (Like EventHorizon) */
         [data-testid="stSidebar"] {
             background-color: #0E1117 !important;
         }
-        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div {
-            color: white !important;
+        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] div, [data-testid="stSidebar"] label {
+            color: #FFFFFF !important; /* Force Sidebar text white */
         }
         
-        /* Cards (White) */
+        /* Pure White Cards with Shadow */
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background-color: #FFFFFF;
             border-radius: 16px;
-            border: 1px solid #E0E0E0;
-            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #E5E7EB;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.05);
         }
         
-        /* Inputs (White) */
+        /* Inputs (White background, Dark Text) */
         .stTextInput input, .stDateInput input, .stTimeInput input, .stTextArea textarea, .stSelectbox div[data-baseweb="select"] {
             background-color: #FFFFFF !important; 
-            color: #1A1C24 !important;
-            border: 1px solid #E0E0E0 !important;
+            color: #111827 !important;
+            border: 1px solid #D1D5DB !important;
         }
         
         /* Date Badge (Light Purple) */
         .date-badge {
-            background-color: #F3F0FF;
+            background-color: #F5F3FF;
             color: #6C63FF !important;
             border: 1px solid #6C63FF;
         }
@@ -101,14 +97,14 @@ def set_css():
         /* Popups (Light) */
         div[data-baseweb="popover"], div[data-baseweb="menu"], div[role="listbox"] {
             background-color: #FFFFFF !important;
-            border: 1px solid #E0E0E0 !important;
+            border: 1px solid #E5E7EB !important;
         }
         li[role="option"] {
-            color: #1A1C24 !important;
+            color: #111827 !important;
             background-color: #FFFFFF !important;
         }
         li[role="option"]:hover {
-            background-color: #F3F0FF !important;
+            background-color: #F3F4F6 !important;
         }
         </style>
     """
@@ -133,6 +129,10 @@ def set_css():
             margin-top: 20px;
             color: white !important;
         }
+        /* Banner text must always be white regardless of theme */
+        .insight-banner div, .insight-banner h2, .insight-banner span {
+            color: white !important;
+        }
         .date-badge {
             padding: 12px;
             border-radius: 12px;
@@ -144,7 +144,6 @@ def set_css():
         </style>
     """
 
-    # Inject CSS based on state
     if st.session_state.theme == 'dark':
         st.markdown(dark_css + shared_css, unsafe_allow_html=True)
     else:
@@ -155,7 +154,8 @@ logic = EventLogic()
 
 # --- HELPER FUNCTIONS ---
 def page_header(title, subtitle):
-    # Text color logic for header (handled by CSS mostly, but icon bar needs to pop)
+    # Title color is handled by CSS (White in dark mode, Black in light mode)
+    # We add a gradient bar for style
     st.markdown(f"""
         <div style="display: flex; align-items: center; margin-bottom: 25px;">
             <div style="background: linear-gradient(135deg, #6C63FF 0%, #4834d4 100%); width: 8px; height: 45px; border-radius: 4px; margin-right: 15px;"></div>
@@ -171,13 +171,14 @@ if 'view_event_id' not in st.session_state: st.session_state['view_event_id'] = 
 
 # --- SIDEBAR ---
 with st.sidebar:
+    # Sidebar header is always white because of CSS rule
     st.markdown("<h2 style='color: white;'>Event Pro</h2>", unsafe_allow_html=True)
     menu = st.radio("", ["Dashboard", "Attendees", "Task Manager", "Analytics"], label_visibility="collapsed")
     
     st.divider()
     
-    # THEME TOGGLE SWITCH
-    st.write("### 🎨 Appearance")
+    # Theme Switcher
+    st.markdown("### 🎨 Appearance")
     mode = st.toggle("Light Mode", value=(st.session_state.theme == 'light'))
     if mode and st.session_state.theme != 'light':
         st.session_state.theme = 'light'
@@ -186,14 +187,14 @@ with st.sidebar:
         st.session_state.theme = 'dark'
         st.rerun()
 
-# --- EVENT CARD RENDERER (WITH DELETE BUTTON) ---
+# --- EVENT CARD RENDERER ---
 def render_event_card(event, unique_idx):
     date_obj = pd.to_datetime(event['date'])
     day = date_obj.day
     month = date_obj.strftime("%b")
     
     with st.container(border=True):
-        c1, c2, c3, c4 = st.columns([1.2, 5, 2, 0.5]) # Added c4 for delete
+        c1, c2, c3, c4 = st.columns([1.2, 5, 2, 0.5])
         
         with c1:
             st.markdown(f"""
@@ -221,12 +222,12 @@ def render_event_card(event, unique_idx):
                 st.rerun()
         
         with c4:
-            st.write("") 
             st.write("")
-            # DELETE BUTTON (Trash Icon)
-            if st.button("🗑️", key=f"del_{event['id']}_{unique_idx}", help="Delete this event"):
+            st.write("")
+            # Delete Button
+            if st.button("🗑️", key=f"del_{event['id']}_{unique_idx}", help="Delete"):
                 logic.delete_event(event['id'])
-                st.toast(f"Event '{event['name']}' deleted!")
+                st.toast("Deleted successfully!")
                 time.sleep(1)
                 st.rerun()
 
@@ -269,7 +270,6 @@ if menu == "Dashboard":
     else:
         # DETAIL VIEW
         events_df = logic.get_events()
-        # Check if event still exists (it might have been deleted!)
         event_row = events_df[events_df['id'] == st.session_state['view_event_id']]
         
         if not event_row.empty:
@@ -290,16 +290,17 @@ if menu == "Dashboard":
                 
             tab_attendees, tab_tasks = st.tabs(["👥 Guest List", "✅ Tasks"])
             
+            # Logic for table styling based on theme
+            is_dark = st.session_state.theme == 'dark'
+            table_bg = '#1A1C24' if is_dark else '#FFFFFF'
+            table_color = 'white' if is_dark else '#111827'
+            
             with tab_attendees:
                 attendees = logic.get_attendees(event['id'])
                 if not attendees.empty:
-                    # STYLING: Check theme for table colors
-                    table_bg = '#1A1C24' if st.session_state.theme == 'dark' else '#FFFFFF'
-                    table_txt = 'white' if st.session_state.theme == 'dark' else 'black'
-                    
                     styled_df = attendees[['name', 'email', 'rsvp', 'role']].style.set_properties(**{
                         'background-color': table_bg,
-                        'color': table_txt,
+                        'color': table_color,
                         'border-color': '#2E303E'
                     })
                     st.dataframe(styled_df, use_container_width=True, hide_index=True)
@@ -309,19 +310,16 @@ if menu == "Dashboard":
             with tab_tasks:
                 tasks = logic.get_tasks(event['id'])
                 if not tasks.empty:
-                    table_bg = '#1A1C24' if st.session_state.theme == 'dark' else '#FFFFFF'
-                    table_txt = 'white' if st.session_state.theme == 'dark' else 'black'
-                    
                     styled_tasks = tasks[['task_name', 'status', 'priority', 'deadline']].style.set_properties(**{
                         'background-color': table_bg,
-                        'color': table_txt,
+                        'color': table_color,
                         'border-color': '#2E303E'
                     })
                     st.dataframe(styled_tasks, use_container_width=True, hide_index=True)
                 else:
                     st.info("No tasks assigned.")
         else:
-            st.warning("This event has been deleted.")
+            st.warning("Event deleted.")
             if st.button("Go Back"):
                 st.session_state['view_event_id'] = None
                 st.rerun()
@@ -347,13 +345,15 @@ elif menu == "Attendees":
         selected_id = st.selectbox("Select Event", event_names.keys(), format_func=lambda x: event_names[x])
         
         attendees = logic.get_attendees(selected_id)
+        
+        is_dark = st.session_state.theme == 'dark'
+        table_bg = '#1A1C24' if is_dark else '#FFFFFF'
+        table_color = 'white' if is_dark else '#111827'
+
         if not attendees.empty:
-            table_bg = '#1A1C24' if st.session_state.theme == 'dark' else '#FFFFFF'
-            table_txt = 'white' if st.session_state.theme == 'dark' else 'black'
-            
             styled_df = attendees[['name', 'email', 'rsvp', 'role']].style.set_properties(**{
                 'background-color': table_bg,
-                'color': table_txt,
+                'color': table_color,
                 'border-color': '#2E303E'
             })
             st.dataframe(styled_df, use_container_width=True, hide_index=True)
@@ -381,13 +381,15 @@ elif menu == "Task Manager":
         selected_id = st.selectbox("Select Event", event_names.keys(), format_func=lambda x: event_names[x])
         
         tasks = logic.get_tasks(selected_id)
+        
+        is_dark = st.session_state.theme == 'dark'
+        table_bg = '#1A1C24' if is_dark else '#FFFFFF'
+        table_color = 'white' if is_dark else '#111827'
+
         if not tasks.empty:
-            table_bg = '#1A1C24' if st.session_state.theme == 'dark' else '#FFFFFF'
-            table_txt = 'white' if st.session_state.theme == 'dark' else 'black'
-            
             styled_tasks = tasks[['task_name', 'status', 'priority', 'deadline']].style.set_properties(**{
                 'background-color': table_bg,
-                'color': table_txt,
+                'color': table_color,
                 'border-color': '#2E303E'
             })
             st.dataframe(styled_tasks, use_container_width=True, hide_index=True)
