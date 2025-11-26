@@ -18,12 +18,9 @@ class EventLogic:
         if df.empty:
             return pd.DataFrame(columns=required_cols)
         
-        # Ensure all columns exist
         for col in required_cols:
-            if col not in df.columns:
-                df[col] = ""
+            if col not in df.columns: df[col] = ""
         
-        # Clean ID
         if 'id' in df.columns:
              df['id'] = pd.to_numeric(df['id'], errors='coerce').fillna(0).astype(int)
              
@@ -32,17 +29,8 @@ class EventLogic:
     def add_event(self, name, date, time, location, description):
         events_df = self.get_events()
         events = events_df.to_dict('records')
-        
         new_id = 1 if not events else max([int(e['id']) for e in events]) + 1
-        
-        new_event = {
-            "id": new_id,
-            "name": name,
-            "date": str(date),
-            "time": str(time),
-            "location": location,
-            "description": description
-        }
+        new_event = {"id": new_id, "name": name, "date": str(date), "time": str(time), "location": location, "description": description}
         events.append(new_event)
         return self.handler.save_data(events, self.sheet_events)
 
@@ -58,26 +46,15 @@ class EventLogic:
         df = self.handler.load_data(self.sheet_attendees)
         cols = ['event_id', 'name', 'email', 'rsvp', 'role', 'dietary']
         if df.empty: return pd.DataFrame(columns=cols)
-        
         if 'event_id' in df.columns:
              df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
-        
-        if event_id:
-            return df[df['event_id'] == int(event_id)]
+        if event_id: return df[df['event_id'] == int(event_id)]
         return df
 
     def add_attendee(self, event_id, name, email, rsvp, role, dietary):
         df = self.handler.load_data(self.sheet_attendees)
         attendees = df.to_dict('records') if not df.empty else []
-        
-        new_att = {
-            "event_id": int(event_id),
-            "name": name,
-            "email": email,
-            "rsvp": rsvp,
-            "role": role,
-            "dietary": dietary
-        }
+        new_att = {"event_id": int(event_id), "name": name, "email": email, "rsvp": rsvp, "role": role, "dietary": dietary}
         attendees.append(new_att)
         return self.handler.save_data(attendees, self.sheet_attendees)
 
@@ -86,32 +63,21 @@ class EventLogic:
         df = self.handler.load_data(self.sheet_tasks)
         cols = ['event_id', 'task_name', 'status', 'deadline', 'priority']
         if df.empty: return pd.DataFrame(columns=cols)
-        
         if 'event_id' in df.columns:
              df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
-
-        if event_id:
-            return df[df['event_id'] == int(event_id)]
+        if event_id: return df[df['event_id'] == int(event_id)]
         return df
 
     def add_task(self, event_id, task_name, status, deadline, priority="Medium"):
         df = self.handler.load_data(self.sheet_tasks)
         tasks = df.to_dict('records') if not df.empty else []
-        
-        new_task = {
-            "event_id": int(event_id),
-            "task_name": task_name,
-            "status": status,
-            "deadline": str(deadline),
-            "priority": priority
-        }
+        new_task = {"event_id": int(event_id), "task_name": task_name, "status": status, "deadline": str(deadline), "priority": priority}
         tasks.append(new_task)
         return self.handler.save_data(tasks, self.sheet_tasks)
 
     def update_task_status(self, event_id, task_name, new_status):
         df = self.handler.load_data(self.sheet_tasks)
         if df.empty: return "No tasks found."
-        
         if 'event_id' in df.columns:
             df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
         
@@ -120,24 +86,22 @@ class EventLogic:
             if row['event_id'] == int(event_id) and row['task_name'] == task_name:
                 df.at[index, 'status'] = new_status
                 updated = True
-        
-        if updated:
-            return self.handler.save_data(df, self.sheet_tasks)
+        if updated: return self.handler.save_data(df, self.sheet_tasks)
         return "Task not found."
 
-    # ================= ANALYTICS (SMALLER SIZE) =================
+    # ================= ANALYTICS (BEAUTIFIED) =================
     def get_rsvp_pie_chart(self, event_id):
         attendees = self.get_attendees(event_id)
         if attendees.empty: return None
         
         rsvp_counts = attendees['rsvp'].value_counts()
         
-        # CHANGED SIZE: (5, 2.5) makes it much shorter
+        # Small, Widescreen Size
         fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        colors = ['#00C853', '#FFAB00', '#D50000']
+        colors = ['#00C853', '#FFAB00', '#D50000'] # Green, Orange, Red
         
         wedges, texts, autotexts = ax.pie(
             rsvp_counts, 
@@ -148,12 +112,9 @@ class EventLogic:
             textprops={'color': "white", 'fontsize': 9}
         )
         
-        # Ensures the chart stays a circle, not an oval
         ax.axis('equal') 
-        
         plt.setp(autotexts, size=9, weight="bold", color="white")
         plt.setp(texts, color="white")
-        
         return fig
 
     def get_task_status_chart(self, event_id):
@@ -162,23 +123,40 @@ class EventLogic:
 
         status_counts = tasks['status'].value_counts()
         
-        # CHANGED SIZE: (5, 2.5)
+        # 1. Create Figure
         fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        bars = ax.bar(status_counts.index, status_counts.values, color='#6C63FF', width=0.4)
+        # 2. Define Colors per Status
+        color_map = {
+            "Not Started": "#9E9E9E", # Grey
+            "In Progress": "#FFA500", # Orange
+            "Completed": "#00C853",   # Green
+            "Delayed": "#FF4B4B"      # Red
+        }
+        # Get color list matching the data order
+        bar_colors = [color_map.get(s, '#6C63FF') for s in status_counts.index]
+
+        # 3. Draw Bar Chart
+        bars = ax.bar(status_counts.index, status_counts.values, color=bar_colors, width=0.5)
         
+        # 4. Clean Up Styling (Remove Borders)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_color('white')
+        ax.spines['left'].set_visible(False) # Hide left line
         ax.spines['bottom'].set_color('white')
-        ax.tick_params(colors='white', labelsize=9)
         
+        # 5. Grid & Ticks
+        ax.grid(axis='y', linestyle='--', alpha=0.2, color='white') # Subtle grid
+        ax.tick_params(colors='white', labelsize=9)
+        ax.tick_params(axis='y', left=False) # Hide y-axis ticks markings
+        
+        # 6. Add Numbers on Top of Bars
         for bar in bars:
             height = bar.get_height()
-            ax.text(bar.get_x() + bar.get_width()/2., height,
+            ax.text(bar.get_x() + bar.get_width()/2., height + 0.1,
                     f'{int(height)}',
-                    ha='center', va='bottom', color='white', fontsize=9)
+                    ha='center', va='bottom', color='white', fontsize=9, fontweight='bold')
         
         return fig
