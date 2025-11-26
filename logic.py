@@ -48,9 +48,7 @@ class EventLogic:
 
     # --- DELETE EVENT ---
     def delete_event(self, event_id):
-        # 1. Delete the event itself
         res = self.handler.delete_data(self.sheet_events, "id", event_id)
-        # 2. Delete associated data
         self.handler.delete_data(self.sheet_attendees, "event_id", event_id)
         self.handler.delete_data(self.sheet_tasks, "event_id", event_id)
         return res
@@ -61,7 +59,6 @@ class EventLogic:
         cols = ['event_id', 'name', 'email', 'rsvp', 'role', 'dietary']
         if df.empty: return pd.DataFrame(columns=cols)
         
-        # Clean ID
         if 'event_id' in df.columns:
              df['event_id'] = pd.to_numeric(df['event_id'], errors='coerce').fillna(0).astype(int)
         
@@ -128,33 +125,33 @@ class EventLogic:
             return self.handler.save_data(df, self.sheet_tasks)
         return "Task not found."
 
-    # ================= ANALYTICS (DONUT & STYLED BAR) =================
+    # ================= ANALYTICS (SMALLER SIZE) =================
     def get_rsvp_pie_chart(self, event_id):
         attendees = self.get_attendees(event_id)
         if attendees.empty: return None
         
         rsvp_counts = attendees['rsvp'].value_counts()
         
-        # Transparent Background
-        fig, ax = plt.subplots(figsize=(5, 4))
+        # CHANGED SIZE: (5, 2.5) makes it much shorter
+        fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        # Custom Colors (Green, Orange, Red)
         colors = ['#00C853', '#FFAB00', '#D50000']
         
-        # DONUT CHART LOGIC
         wedges, texts, autotexts = ax.pie(
             rsvp_counts, 
             labels=rsvp_counts.index, 
             autopct='%1.1f%%', 
             colors=colors[:len(rsvp_counts)],
-            wedgeprops=dict(width=0.4, edgecolor='none'), # width=0.4 makes it a ring
-            textprops={'color': "white", 'fontsize': 10}
+            wedgeprops=dict(width=0.4, edgecolor='none'),
+            textprops={'color': "white", 'fontsize': 9}
         )
         
-        # Style the percentage text
-        plt.setp(autotexts, size=10, weight="bold", color="white")
+        # Ensures the chart stays a circle, not an oval
+        ax.axis('equal') 
+        
+        plt.setp(autotexts, size=9, weight="bold", color="white")
         plt.setp(texts, color="white")
         
         return fig
@@ -165,26 +162,23 @@ class EventLogic:
 
         status_counts = tasks['status'].value_counts()
         
-        fig, ax = plt.subplots(figsize=(4, 3))
+        # CHANGED SIZE: (5, 2.5)
+        fig, ax = plt.subplots(figsize=(5, 2.5))
         fig.patch.set_alpha(0.0)
         ax.patch.set_alpha(0.0)
         
-        # Bar Chart
-        bars = ax.bar(status_counts.index, status_counts.values, color='#6C63FF', width=0.5)
+        bars = ax.bar(status_counts.index, status_counts.values, color='#6C63FF', width=0.4)
         
-        # Minimal Styling (Remove borders)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_color('white')
         ax.spines['bottom'].set_color('white')
-        ax.tick_params(colors='white')
+        ax.tick_params(colors='white', labelsize=9)
         
-        # Add numbers on top of bars
         for bar in bars:
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
                     f'{int(height)}',
-                    ha='center', va='bottom', color='white')
+                    ha='center', va='bottom', color='white', fontsize=9)
         
         return fig
-
